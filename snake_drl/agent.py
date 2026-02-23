@@ -97,7 +97,7 @@ class DQNAgent:
             return None
 
         batch, indices, weights = self.memory.sample(batch_size)
-        states, actions, rewards, next_states, dones = zip(*batch)
+        states, actions, rewards, next_states, dones = zip(*batch, strict=False)
 
         states_t = torch.as_tensor(np.asarray(states), dtype=torch.float32, device=self.device)
         actions_t = torch.as_tensor(actions, dtype=torch.int64, device=self.device)

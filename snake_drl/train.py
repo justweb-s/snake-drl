@@ -105,12 +105,26 @@ def main(argv: list[str] | None = None) -> None:
 
     curriculum = None
     if not args.no_curriculum:
-        curriculum = CurriculumManager(grid_min=args.grid_min, grid_max=args.grid_max, threshold_scores=tuple(args.threshold_scores))
+        curriculum = CurriculumManager(
+            grid_min=args.grid_min,
+            grid_max=args.grid_max,
+            threshold_scores=tuple(args.threshold_scores),
+        )
         grid_w, grid_h = curriculum.get_grid_size()
         use_obstacles = curriculum.get_obstacle_setting()
-        env = SnakeGame(grid_width=grid_w, grid_height=grid_h, obstacles=use_obstacles, curriculum_level=curriculum.current_level)
+        env = SnakeGame(
+            grid_width=grid_w,
+            grid_height=grid_h,
+            obstacles=use_obstacles,
+            curriculum_level=curriculum.current_level,
+        )
     else:
-        env = SnakeGame(grid_width=args.grid_max, grid_height=args.grid_max, obstacles=args.obstacles, curriculum_level=0)
+        env = SnakeGame(
+            grid_width=args.grid_max,
+            grid_height=args.grid_max,
+            obstacles=args.obstacles,
+            curriculum_level=0,
+        )
 
     state_size = int(env.reset().shape[0])
     action_size = 3
@@ -333,7 +347,10 @@ def main(argv: list[str] | None = None) -> None:
                     extra={"best_avg_score": best_avg_score},
                 )
 
-            if args.print_every and (episode % args.print_every == 0 or episode == start_episode or episode == args.episodes - 1):
+            should_print = args.print_every and (
+                episode % args.print_every == 0 or episode == start_episode or episode == args.episodes - 1
+            )
+            if should_print:
                 print(
                     " | ".join(
                         [

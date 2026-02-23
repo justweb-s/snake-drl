@@ -47,7 +47,7 @@ class PrioritizedReplayMemory:
         return samples, indices, weights
 
     def update_priorities(self, indices, errors) -> None:
-        for idx, error in zip(indices, errors):
+        for idx, error in zip(indices, errors, strict=False):
             self.priorities[idx] = float(error) + self.epsilon
 
     def __len__(self) -> int:
