@@ -62,6 +62,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     p.add_argument("--log-dir", type=str, default="runs")
     p.add_argument("--run-name", type=str, default=None)
+    p.add_argument("--print-every", type=int, default=10)
     p.add_argument("--save-every", type=int, default=100)
     p.add_argument("--eval-every", type=int, default=0)
     p.add_argument("--eval-episodes", type=int, default=5)
@@ -94,6 +95,9 @@ def main(argv: list[str] | None = None) -> None:
     config["run_dir"] = str(run_dir)
     if not resume_ckpt_path:
         json_dump(run_dir / "config.json", config)
+
+    print(f"Run directory: {run_dir}", flush=True)
+    print(f"TensorBoard: tensorboard --logdir {run_dir / 'tensorboard'}", flush=True)
 
     curriculum = None
     if not args.no_curriculum:
@@ -259,6 +263,24 @@ def main(argv: list[str] | None = None) -> None:
                     episode=episode,
                     config={"env": row, "args": config},
                     extra={"best_avg_score": best_avg_score},
+                )
+
+            if args.print_every and (episode % args.print_every == 0 or episode == start_episode or episode == args.episodes - 1):
+                print(
+                    " | ".join(
+                        [
+                            f"episode={episode}",
+                            f"score={env.score}",
+                            f"avg_score={agent.avg_score:.2f}",
+                            f"epsilon={agent.epsilon:.3f}",
+                            f"loss={loss_mean:.4f}",
+                            f"steps={steps}",
+                            f"level={getattr(curriculum, 'current_level', 0)}",
+                            f"grid={env.grid_width}x{env.grid_height}",
+                            f"obstacles={int(env.use_obstacles)}",
+                        ]
+                    ),
+                    flush=True,
                 )
 
     writer.close()

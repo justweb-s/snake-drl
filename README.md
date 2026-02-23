@@ -119,10 +119,24 @@ snake-drl-play --help
 
 ## Train
 
+Training is headless (no game window): progress, checkpoints and metrics are written to disk under `runs/`.
+
 Headless training (default):
 
 ```bash
 python -m snake_drl.train --episodes 2000 --seed 42
+```
+
+Print progress more frequently (every episode):
+
+```bash
+python -m snake_drl.train --episodes 500 --print-every 1
+```
+
+Disable console output:
+
+```bash
+python -m snake_drl.train --episodes 500 --print-every 0
 ```
 
 If you installed the package in editable mode (`pip install -e .`), you can also use:
@@ -136,6 +150,13 @@ Checkpoints are saved under:
 ```text
 runs/<RUN_NAME>/checkpoints/best.pt
 runs/<RUN_NAME>/checkpoints/last.pt
+```
+
+Metrics are saved under:
+
+```text
+runs/<RUN_NAME>/metrics.csv
+runs/<RUN_NAME>/tensorboard/
 ```
 
 With evaluation every N episodes:
