@@ -139,6 +139,22 @@ Disable console output:
 python -m snake_drl.train --episodes 500 --print-every 0
 ```
 
+Live training (render the agent while training):
+
+```bash
+python -m snake_drl.train --episodes 500 --render --render-fps 30 --cell-size 20
+```
+
+Controls (when `--render` is enabled):
+
+- Close the window or press `ESC` to stop training gracefully.
+
+To speed up rendering you can skip frames (render every N environment steps):
+
+```bash
+python -m snake_drl.train --episodes 500 --render --render-skip 5
+```
+
 If you installed the package in editable mode (`pip install -e .`), you can also use:
 
 ```bash

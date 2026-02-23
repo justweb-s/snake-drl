@@ -63,6 +63,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--log-dir", type=str, default="runs")
     p.add_argument("--run-name", type=str, default=None)
     p.add_argument("--print-every", type=int, default=10)
+    p.add_argument("--render", action="store_true")
+    p.add_argument("--render-fps", type=int, default=30)
+    p.add_argument("--cell-size", type=int, default=20)
+    p.add_argument("--render-skip", type=int, default=1)
     p.add_argument("--save-every", type=int, default=100)
     p.add_argument("--eval-every", type=int, default=0)
     p.add_argument("--eval-episodes", type=int, default=5)
@@ -145,6 +149,31 @@ def main(argv: list[str] | None = None) -> None:
         if curriculum is not None:
             curriculum.current_level = int(env_cfg.get("curriculum_level", curriculum.current_level))
 
+    pygame = None
+    screen = None
+    clock = None
+    font = None
+    render_interval = 1
+
+    def _init_renderer():
+        nonlocal pygame, screen, clock, font
+        if pygame is None:
+            import pygame as _pygame
+
+            pygame = _pygame
+            pygame.init()
+            clock = pygame.time.Clock()
+            font = pygame.font.SysFont(None, 24)
+
+        width = env.grid_width * args.cell_size
+        height = env.grid_height * args.cell_size
+        screen = pygame.display.set_mode((width, height))
+        pygame.display.set_caption("Snake DRL - Training")
+
+    if args.render:
+        render_interval = max(1, int(args.render_skip))
+        _init_renderer()
+
     writer = SummaryWriter(log_dir=str(run_dir / "tensorboard"))
 
     metrics_path = run_dir / "metrics.csv"
@@ -170,7 +199,14 @@ def main(argv: list[str] | None = None) -> None:
         if write_header:
             csv_writer.writeheader()
 
+        stop_training = False
+        needs_resize = False
+
         for episode in range(start_episode, args.episodes):
+            if args.render and needs_resize:
+                _init_renderer()
+                needs_resize = False
+
             state = env.reset()
             reward_sum = 0.0
             steps = 0
@@ -179,6 +215,17 @@ def main(argv: list[str] | None = None) -> None:
             loss_count = 0
 
             while True:
+                if args.render:
+                    for event in pygame.event.get():
+                        if event.type == pygame.QUIT:
+                            stop_training = True
+                            break
+                        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                            stop_training = True
+                            break
+                    if stop_training:
+                        break
+
                 action = agent.act(state, training=True)
                 next_state, reward, done = env.step(action)
 
@@ -194,8 +241,27 @@ def main(argv: list[str] | None = None) -> None:
                 reward_sum += float(reward)
                 steps += 1
 
+                if args.render and steps % render_interval == 0:
+                    white = env.render(screen, cell_size=args.cell_size, draw_grid=True)
+                    hud = " | ".join(
+                        [
+                            f"ep={episode}",
+                            f"score={env.score}",
+                            f"avg={agent.avg_score:.2f}",
+                            f"eps={agent.epsilon:.3f}",
+                            f"lvl={getattr(curriculum, 'current_level', 0)}",
+                        ]
+                    )
+                    text = font.render(hud, True, white)
+                    screen.blit(text, (8, 8))
+                    pygame.display.flip()
+                    clock.tick(max(1, args.render_fps))
+
                 if done:
                     break
+
+            if stop_training:
+                break
 
             agent.update_metrics(env.score)
 
@@ -212,6 +278,8 @@ def main(argv: list[str] | None = None) -> None:
                     obstacles=use_obstacles,
                     curriculum_level=curriculum.current_level,
                 )
+                if args.render:
+                    needs_resize = True
 
             loss_mean = (loss_sum / loss_count) if loss_count else 0.0
 
@@ -282,6 +350,9 @@ def main(argv: list[str] | None = None) -> None:
                     ),
                     flush=True,
                 )
+
+        if args.render and pygame is not None:
+            pygame.quit()
 
     writer.close()
 
