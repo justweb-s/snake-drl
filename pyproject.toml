@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "snake-drl"
+version = "0.1.0"
+description = "Snake Deep Reinforcement Learning (DQN + PER + Curriculum)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Marco Ledda" }]
+dependencies = [
+  "numpy>=1.26",
+  "pygame>=2.5",
+  "torch>=2.2",
+  "tensorboard>=2.16",
+]
+
+[project.optional-dependencies]
+plots = ["matplotlib>=3.8"]
+dev = [
+  "pytest>=8.0",
+  "pre-commit>=3.7",
+  "ruff>=0.6",
+]
+
+[project.scripts]
+snake-drl-train = "snake_drl.train:main"
+snake-drl-play = "snake_drl.play:main"
+
+[tool.setuptools]
+packages = ["snake_drl"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.ruff.format]
+quote-style = "double"

@@ -1,0 +1,5 @@
+numpy>=1.26
+pygame>=2.5
+torch>=2.2
+tensorboard>=2.16
+matplotlib>=3.8
