@@ -15,7 +15,7 @@ Notes about PyTorch:
 ## Clone
 
 ```bash
-git clone https://github.com/<YOUR_GITHUB_USERNAME>/snake-drl.git
+git clone https://github.com/justweb-s/snake-drl.git
 cd snake-drl
 ```
 
